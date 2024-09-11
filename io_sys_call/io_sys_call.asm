@@ -2,11 +2,15 @@ section .data
 error_msg db "Error", 0dH, 0aH
 error_msg_length EQU $-error_msg
 
+section .bss
+temp_str resb 30
+
 section .text
 
 global _puts
 global _gets
 global _atoi
+global _itoa
 
 ; int _puts(int, char*)
 _puts:
@@ -84,6 +88,52 @@ __end_atoi:
     leave
     ret
 
+; int _itoa(int, char*)
+_itoa:
+    enter 4,0
+    push ebx
+    push esi
+
+    mov ebx, [ebp+12]
+    mov esi, 0
+
+    mov eax, [ebp+8]
+
+__loop_itoa:
+    cdq
+    mov ecx, 10
+    div ecx
+
+    mov byte [ebx+esi], dl
+    inc esi
+
+    cmp eax, 0
+    jne __loop_itoa
+
+    mov ecx, esi
+__loop_revert_str_itoa:
+    mov dword eax, [ebx+ecx-1]
+    mov dword [ebp-4], esi
+    sub [ebp-4], ecx
+
+    push ecx
+    mov ecx, [ebp-4]
+    mov dword [temp_str+ecx], eax
+    pop ecx
+
+    loop __loop_revert_str_itoa
+
+__loop_restore_str_itoa:
+
+
+    mov eax, esi
+
+    pop esi
+    pop ebx
+
+    leave
+    ret
+
 __fatal_error:
     push dword error_msg
     push dword error_msg_length
@@ -92,4 +142,3 @@ __fatal_error:
     mov eax, 1
     mov ebx, 1
     int 0x80
-
