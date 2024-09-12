@@ -3,7 +3,7 @@ error_msg db "Error", 0dH, 0aH
 error_msg_length EQU $-error_msg
 
 section .bss
-temp_str resb 30
+temp_str resb 100
 
 section .text
 
@@ -104,30 +104,24 @@ __loop_itoa:
     mov ecx, 10
     div ecx
 
-    mov byte [ebx+esi], dl
+    add dl, 0x30
+
+    mov byte [temp_str+esi], dl
     inc esi
 
     cmp eax, 0
     jne __loop_itoa
 
     mov ecx, esi
+    mov esi, 0
+
 __loop_revert_str_itoa:
-    mov dword eax, [ebx+ecx-1]
-    mov dword [ebp-4], esi
-    sub [ebp-4], ecx
-
-    push ecx
-    mov ecx, [ebp-4]
-    mov dword [temp_str+ecx], eax
-    pop ecx
-
+    mov byte al, [temp_str+ecx-1]
+    mov byte [ebx+esi], al
+    inc esi
     loop __loop_revert_str_itoa
 
-__loop_restore_str_itoa:
-
-
     mov eax, esi
-
     pop esi
     pop ebx
 
